@@ -8,7 +8,7 @@ public class CubeScript : MonoBehaviour
 {
    double[] doubles;
    int angle = 3;        // similar to doublesIndex but used in Update()
-   int slowSim = 0, lineNum = 1;
+   int slowSim = 0;
 
 
    /* 
@@ -19,11 +19,13 @@ public class CubeScript : MonoBehaviour
     *             the roll, pitch, yaw date points are stored into the array "doubles[]"
     * rotationFile:  The current data file being read from
     * doublesIndex:  The current position in the doubles[] array
-    * filePath:  string containing the path of the specified file
+    * filePath:  String containing the path of the specified input file
+    * outputPath:  String containing the path for the Output File which contains data from doubles[] 
+    *              separated by new lines
     */
    void BufferRotation ()
    {      
-      string filePath = @"/Users/Johnny/Documents/ProSense/GitHub/ProSense-V2/ProSense/Assets/Test_Files/TestNoSpace.out";
+      string filePath = @"/Users/Johnny/Documents/ProSense/GitHub/ProSense-V2/ProSense/Assets/Test_Files/pitching.in";
       string outputPath = @"/Users/Johnny/Documents/ProSense/GitHub/ProSense-V2/ProSense/Assets/Output_Files/DoublesOutput.out";
       double parseResult = 0;
       int RPYfinder = 1, doublesIndex = 0; 
@@ -82,7 +84,7 @@ public class CubeScript : MonoBehaviour
 
       while (ndx < arrLength)
       {
-         Debug.Log(String.Format("x = {0}, y = {1}, z = {2}  -  line number = {3}", 
+         Debug.Log(String.Format("roll = {0},  pitch = {1},  yaw = {2}  -  line number = {3}", 
             doubles[ndx], doubles[ndx+1], doubles[ndx+2], lineNumber));
          lineNumber++;
          ndx += 3;
@@ -96,6 +98,7 @@ public class CubeScript : MonoBehaviour
    void Start () 
    {
       BufferRotation();
+      PrintDoublesArray();
    }
 
 
@@ -107,6 +110,8 @@ public class CubeScript : MonoBehaviour
     *                         the method rotates the correct amount of degrees
     * endOfFile: variable for EOF so application quits when there's no more data
     * slowSim: variable used to slow down simulation speed by adding "waits" - lazy man style
+    *
+    * transform.Roate takes data as PITCH, YAW, ROLL
     */
 	void Update () 
 	{
@@ -120,27 +125,27 @@ public class CubeScript : MonoBehaviour
       }
       else
       {
-         if (slowSim == 0) 
-         {
+         //if (slowSim == 0) 
+        // {
             deltaX = (float)(doubles[angle] - doubles[angle-3]);
             deltaY = (float)(doubles[angle+1] - doubles[angle-2]);
             deltaZ = (float)(doubles[angle+2] - doubles[angle-1]);
 
-            transform.Rotate(deltaX, deltaY, deltaZ);
+            transform.Rotate(deltaY, 0, deltaX);
             angle += 3;
             slowSim++;
 
             //Debug.Log(String.Format("x = {0}, y = {1}, z = {2},    LINE NUMBER: {3}", 
             //   doubles[angle], doubles[angle+1], doubles[angle+2], lineNum++));
-         }
-         else if (slowSim >= 1 && slowSim <= 7) 
-         {
-            slowSim++;
-         }
-         else 
-         {
-            slowSim = 0;
-         }
+         //}
+         //else if (slowSim >= 1 && slowSim <= 3) 
+        // {
+         ///   slowSim++;
+        // }
+        // else 
+        // {
+         //   slowSim = 0;
+        // }
       }
 	}
 }
