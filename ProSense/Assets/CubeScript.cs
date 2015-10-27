@@ -4,87 +4,143 @@ using System.Text.RegularExpressions;
 using System.Collections;
 using System.IO;
 
-public class CubeScript : MonoBehaviour {
-
+public class CubeScript : MonoBehaviour 
+{
    double[] doubles;
-   int angle = 0;
-   int bob = 0;
+   int angle = 3;        // similar to doublesIndex but used in Update()
+   int slowSim = 0, lineNum = 1;
 
-   // Open file and store data into array for processing
+
+   /* 
+    * Open file containing degrees of rotation and store data into array of doubles "doubles[]"
+    * for processing simulation.
+    * 
+    * RPYfinder:  Simple counter to determine the correct data points in the data file so that only
+    *             the roll, pitch, yaw date points are stored into the array "doubles[]"
+    * rotationFile:  The current data file being read from
+    * doublesIndex:  The current position in the doubles[] array
+    * filePath:  string containing the path of the specified file
+    */
    void BufferRotation ()
-   {
-      FileStream rotationFile = new FileStream(@"/Users/Johnny/Documents/ProSense/GitHub/ProSense-V2/ProSense/Assets/60sec.out", FileMode.Open, FileAccess.Read);
+   {      
+      string filePath = @"/Users/Johnny/Documents/ProSense/GitHub/ProSense-V2/ProSense/Assets/Test_Files/TestNoSpace.out";
+      string outputPath = @"/Users/Johnny/Documents/ProSense/GitHub/ProSense-V2/ProSense/Assets/Output_Files/DoublesOutput.out";
       double parseResult = 0;
-      int counter = 1, doublesIndex = 0; //, i = 0, arrlength = 0;
+      int RPYfinder = 1, doublesIndex = 0; 
+      FileStream rotationFile = new FileStream(filePath, FileMode.Open, FileAccess.Read);
 
       try
       {
-         /*-------------------------------------------------*/
-         using (TextWriter tw = new StreamWriter(@"out.txt"))
+         using (TextWriter tw = new StreamWriter(outputPath))
          {
-            string fileContent = File.ReadAllText(@"/Users/Johnny/Documents/ProSense/GitHub/ProSense-V2/ProSense/Assets/60sec.out");
-            string[] doubleStrings = fileContent.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-
+            string fileContent = File.ReadAllText(filePath);
+            string[] doubleStrings = fileContent.Split(default(Char[]), StringSplitOptions.RemoveEmptyEntries);
             doubles = new double[(doubleStrings.Length*3)/7];
 
-            for (int n = 0; n < doubleStrings.Length; n++)
+            for (int ndx = 0; ndx < doubleStrings.Length; ndx++)
             {
-               if (Double.TryParse(doubleStrings[n], out parseResult)) 
+               if (RPYfinder >= 1 && RPYfinder <= 3)
                {
-                  if (counter >= 1 && counter <= 3)
+                  RPYfinder++;
+               }
+               else if (RPYfinder >= 4 && RPYfinder <= 6) 
+               {
+                  if (Double.TryParse(doubleStrings[ndx], out parseResult))
                   {
-                     counter++;
-                  }
-                  else if (counter >= 4 && counter <= 6) 
-                  {
-                     doubles[doublesIndex] = Double.Parse(doubleStrings[n]); //, out parseResult);
-                     tw.Write(doubles[doublesIndex] + " ");
-                     counter++;
-                     doublesIndex++;
-                  }
-                  else
-                  {
-                     counter = 1;
+                     doubles[doublesIndex] = Double.Parse(doubleStrings[ndx]); 
+                     tw.Write(doubles[doublesIndex++] + "\n");
+                     RPYfinder++;
                   }
                }
+               else
+               {
+                  RPYfinder = 1;
+               }
             }
-
-            /*arrlength = doubles.Length;
-            while (i < arrlength)
-            {
-               Debug.Log(String.Format("{0}", doubles[i]));
-               i++;
-            }*/
          }
-         /*-------------------------------------------------*/
       }
       
       finally
       {
          rotationFile.Close();
       }
-
    }
 
-   // Use this for initialization
+
+   /*
+    * Prints doubles[] in format:
+    *          X, Y, Z, line number in file
+    *
+    * arrLength: length of array; used when EOF is reached
+    * ndx: current position in the array
+    * lineNumber: keeps track of the line number in the original data file
+    */
+   void PrintDoublesArray ()
+   {
+      int arrLength = doubles.Length, ndx = 0;
+      int lineNumber = 1;
+
+      while (ndx < arrLength)
+      {
+         Debug.Log(String.Format("x = {0}, y = {1}, z = {2}  -  line number = {3}", 
+            doubles[ndx], doubles[ndx+1], doubles[ndx+2], lineNumber));
+         lineNumber++;
+         ndx += 3;
+      }
+   }
+
+
+   /* 
+    * Use this for initialization of EVERYTHING
+    */
    void Start () 
    {
       BufferRotation();
    }
 
-	// Update is called once per frame
+
+	/* 
+    * Update() method is called every frame
+    * Currently just rotates cube and quits when the EOF is reached.
+    *
+    * deltaX, deltaY, deltaZ: change in degrees of rotation; used in transform.Rotate so 
+    *                         the method rotates the correct amount of degrees
+    * endOfFile: variable for EOF so application quits when there's no more data
+    * slowSim: variable used to slow down simulation speed by adding "waits" - lazy man style
+    */
 	void Update () 
 	{
-      if (bob == 0) {
-         transform.Rotate((float)doubles[angle], (float)doubles[angle+1], (float)doubles[angle+2]);
-         angle += 3;
-         bob++;
+      float deltaX = 0, deltaY = 0, deltaZ = 0;
+      int endOfFile = doubles.Length - 3;
+
+      if (angle >= endOfFile) 
+      {
+         print("GAME OVER. PLAYER 1 WINS.\n");
+         Application.Quit();
       }
-      else if (bob >= 1 && bob <= 7) {
-         bob++;
-      }
-      else {
-         bob = 0;
+      else
+      {
+         if (slowSim == 0) 
+         {
+            deltaX = (float)(doubles[angle] - doubles[angle-3]);
+            deltaY = (float)(doubles[angle+1] - doubles[angle-2]);
+            deltaZ = (float)(doubles[angle+2] - doubles[angle-1]);
+
+            transform.Rotate(deltaX, deltaY, deltaZ);
+            angle += 3;
+            slowSim++;
+
+            //Debug.Log(String.Format("x = {0}, y = {1}, z = {2},    LINE NUMBER: {3}", 
+            //   doubles[angle], doubles[angle+1], doubles[angle+2], lineNum++));
+         }
+         else if (slowSim >= 1 && slowSim <= 7) 
+         {
+            slowSim++;
+         }
+         else 
+         {
+            slowSim = 0;
+         }
       }
 	}
 }
