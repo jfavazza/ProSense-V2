@@ -8,31 +8,8 @@ public class CubeScript : MonoBehaviour
 {
    /*  public variables  */
    public double[] doubles;
-   public int angle, pathFlag;   
+   public int angle;  
    public string dataFilePath;
-   public FileBrowser fb;
-   public GUISkin[] skins;
-   public Texture2D file,folder,back,drive;
-
-void OnGUI()
-{
-   if (fb.drawWindow == true) 
-   {
-      if (fb.draw())
-      {
-         if (fb.outputFile == null)
-         {
-            fb.drawWindow = false;
-         }
-         else
-         {
-            dataFilePath = fb.outputFile.ToString();
-            pathFlag = 1;
-            fb.drawWindow = false;
-         }
-      }
-   }
-}
 
   /* 
    * Open file containing degrees of rotation and store data into array of doubles "doubles[]"
@@ -95,6 +72,7 @@ void OnGUI()
   /*
    * Prints doubles[] in format:
    *          Roll, Pitch, Yaw, line number in file
+   * for help in debugging program.
    *
    * arrLength: length of array; used when EOF is reached
    * ndx: current position in the array
@@ -121,17 +99,7 @@ void OnGUI()
    void Start () 
    {
       angle = 3;
-      pathFlag = 0;
-      dataFilePath = null;
-
-      fb = new FileBrowser(@"/Users/Johnny/Documents/ProSense/GitHub/ProSense-V2/ProSense/Assets/Test_Files");
-      /*fb.guiSkin = skins[0];
-      fb.fileTexture = file; 
-      fb.directoryTexture = folder;
-      fb.backTexture = back;
-      fb.driveTexture = drive;
-      fb.showSearch = true;
-      fb.searchRecursively = true;*/
+      dataFilePath = FileBrowserScript.dataFilePath;
    }
 
 
@@ -151,10 +119,10 @@ void OnGUI()
       float deltaX = 0, deltaY = 0; //, deltaZ = 0;
       int endOfFile; 
 
-      if (pathFlag == 1)
+      if (FileBrowserScript.pathFlag == 1)
       {
          BufferRotation(dataFilePath);
-         pathFlag = 0;
+         FileBrowserScript.pathFlag = 0;
       }
 
       if (dataFilePath != null) 
@@ -164,7 +132,7 @@ void OnGUI()
          if (angle >= endOfFile) 
          {
             print("GAME OVER. PLAYER 1 WINS.\n");
-            Application.Quit();
+            Application.LoadLevel("FileBrowserScreen");
          }
          else
          {
